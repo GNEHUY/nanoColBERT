@@ -10,6 +10,7 @@ from transformers import BertTokenizer
 import torch
 import faiss
 import time
+import numpy as np
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -41,19 +42,19 @@ if __name__ == "__main__":
     length_files.sort(key=lambda x:os.path.basename(x).split(".")[0].split("_")[-2:])
 
     # 1. token level retrieval
-    print(f"reading faiss index from {args.faiss_index_path}")
+    print(f"reading faiss index from {args.faiss_index_path}", flush=True)
     faiss_index = faiss.read_index(args.faiss_index_path)
     faiss_index.nprobe = args.nprobe
 
     # 2. sentence level reranking
     all_token_embeddings = []
     for file in embedding_files:
-        print(f"loading {file}")
+        print(f"loading {file}", flush=True)
         all_token_embeddings.append(torch.load(file))
     dummy_embeddings = torch.zeros((args.doc_max_len,DIM)) ## since we select each doc with doc_max_len
     all_token_embeddings.append(dummy_embeddings)
     all_token_embeddings = torch.cat(all_token_embeddings,dim=0)
-    print("total_embeddings.shape=",all_token_embeddings.shape)
+    print("total_embeddings.shape=",all_token_embeddings.shape, flush=True)
 
 
     ## build mapping
@@ -62,9 +63,11 @@ if __name__ == "__main__":
 
     NUM_DOCS = len(all_length)
     NUM_EMBEDDINGS = all_token_embeddings.shape[0] - args.doc_max_len
+    print(NUM_EMBEDDINGS, flush=True)
 
     embedding2pid = [0 for _ in range(NUM_EMBEDDINGS)]
     pid2embedding = [0 for _ in range(NUM_DOCS)]
+    print(len(embedding2pid), flush=True)
 
     start_pos = 0
     for pid,length in enumerate(all_length):
@@ -112,6 +115,8 @@ if __name__ == "__main__":
         ## ===faiss search=== ##
         faiss_start_time = time.time()
         embedding_to_faiss = query_embedding.cpu()
+        # faiss version:faiss-gpu=1.7.0, need numpy array
+        embedding_to_faiss = np.array(embedding_to_faiss, dtype=np.float32)
         _ , I = faiss_index.search(embedding_to_faiss, args.search_k)
         all_time['faiss'].append(time.time()-faiss_start_time)
 

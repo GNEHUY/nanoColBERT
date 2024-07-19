@@ -12,3 +12,5 @@ ranking.tsv
 bug.py
 model.txt
 ColBERT
+bert-base-uncased
+*.txt

@@ -24,7 +24,7 @@ bash scripts/run_colbert.sh
 ```
 It would first download the data, preprocess the data, train the model, index with faiss, conduct retrieval and calculate the score.
 
-## Results
+## Author's results
 
 This is our reproduced results:
 
@@ -55,3 +55,14 @@ pretrained_model = "nanoColBERT/ColBERTv1"
 model = ColBERT.from_pretrained(pretrained_model)
 tokenizer = BertTokenizer.from_pretrained(pretrained_model) 
 ```
+
+## Our results
+
+The following reveals the duration of each step:
+|    **Step**   | **Duration** | **Remark** |
+|:-------------:|:------------:|----------|
+|    tsv2mmap   |    2h33min   |            |
+|     train     |    18h17min  |   400k steps on 1*RTX 3090   |
+| doc2emebdding |    3h48min   |   2*RTX 3090   |
+|  build_index  |     59min    |   30% training data with IVFPQ on 1*RTX 3090   |
+|    retrieve   |     29min    |   6980 samples on 1*RTX 3090 |

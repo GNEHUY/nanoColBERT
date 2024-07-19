@@ -69,6 +69,7 @@ class ColBERT(BertPreTrainedModel):
         doc_attention_mask, # [bs*2,seq_len]
     ):  
         query_embedding = self.get_query_embedding(query_input_ids,query_attention_mask)
+        """bs*2,将查询文本的嵌入表示扩展到与文档文本相匹配的数量，以便后续计算相似度得分时能够对齐查询和文档。"""
         query_embedding = query_embedding.repeat(2,1,1)
         doc_embedding   = self.get_doc_embedding(doc_input_ids,doc_attention_mask)
 
